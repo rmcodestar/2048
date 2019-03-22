@@ -255,7 +255,7 @@
                     this._excute({
                         base : "x"
                         , ordering: function (target, other) {
-                         return target.y > other.y;
+                         return target.y - other.y;
                         }
                         , reorder : (function (orderTargets) {
                             var offset = this.MIN_Y;
@@ -272,7 +272,7 @@
                     this._excute({
                         base : "x"
                         , ordering: function (target, other) {
-                         return target.y < other.y;
+                         return other.y - target.y;
                         }
                         , reorder : (function (orderTargets) {
                             var offset = this.MAX_Y;
@@ -290,7 +290,7 @@
                     this._excute({
                         base : "y"
                         , ordering: function (target, other) {
-                         return target.x > other.x;
+                         return target.x - other.x;
                         }
                         , reorder : (function (orderTargets) {
                             var offset = this.MIN_X;
@@ -308,7 +308,7 @@
                     this._excute({
                         base : "y"
                         , ordering: function (target, other) {
-                         return target.y < other.y;
+                         return other.y - target.y;
                         }
                         , reorder : (function (orderTargets) {
                             var offset = this.MAX_X;
