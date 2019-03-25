@@ -53,6 +53,8 @@
             .item[data-value='512'] { background-color: #F9A825; }
             .item[data-value='1024'] { background-color: #F57F17; }
             .item[data-value='2048'] { background-color: #FF6F00; }    
+
+            .w3-animate-fading{animation:fading 2s;}@keyframes fading{0%{opacity:0}50%{opacity:1}}
         </style>
     </head>
     <body>
@@ -71,7 +73,7 @@
                 <table class="game-board" :class="{'end' : isCompleted}">
                     <tbody>
                         <tr class="row" v-for="(n, y) in 4">
-                            <td class="column" v-for="(n, x) in 4" :class="{ 'item' : alive(x, y) }" :data-value="getItem(x,y).value">
+                            <td class="column" v-for="(n, x) in 4" :class="{ 'item' : alive(x, y), 'w3-animate-fading' : getItem(x, y).turn == turn }" :data-value="getItem(x,y).value">
                                 <div>{{getItem(x, y).value}}</div>
                             </td>    
                         </tr>
@@ -258,12 +260,19 @@
                          return target.y - other.y;
                         }
                         , reorder : (function (orderTargets) {
+							var changes = 0;
                             var offset = this.MIN_Y;
                              $.each(orderTargets, function(index, item) {
                                 if(item.state != STATE.DELETED) {
+									if(item.y != offset) {
+										changes ++;
+									}
+
                                     item.y = offset++;
                                 } 
                              }); 
+							 
+							return changes;
                         }).bind(this)
                     });
                  }
@@ -275,12 +284,18 @@
                          return other.y - target.y;
                         }
                         , reorder : (function (orderTargets) {
+							var changes = 0;
                             var offset = this.MAX_Y;
                              $.each(orderTargets, function(index, item) {
                                 if(item.state != STATE.DELETED) {
+									if(item.y != offset) {
+										changes ++;
+									}
                                     item.y = offset--;
                                 } 
                              }); 
+							 
+							 return changes;
                         }).bind(this)
                     });
                      
@@ -293,12 +308,17 @@
                          return target.x - other.x;
                         }
                         , reorder : (function (orderTargets) {
+							var changes = 0;
                             var offset = this.MIN_X;
                              $.each(orderTargets, function(index, item) {
                                 if(item.state != STATE.DELETED) {
+									if(item.x != offset) {
+										changes ++;
+									}
                                     item.x = offset++;
                                 } 
                              }); 
+							return changes;
                         }).bind(this)
                     })
 
@@ -308,32 +328,38 @@
                     this._excute({
                         base : "y"
                         , ordering: function (target, other) {
-                         return other.y - target.y;
+                         return other.x - target.x;
                         }
                         , reorder : (function (orderTargets) {
+							var changes = 0;
                             var offset = this.MAX_X;
                              $.each(orderTargets, function(index, item) {
                                 if(item.state != STATE.DELETED) {
+									if(item.x != offset) {
+										changes ++;
+									}
                                     item.x = offset--;
                                 } 
                              }); 
+							return changes;
                         }).bind(this)
                     })
 
                  }
                  , _excute : function (rule) {
+                     var changes = this._doRule(rule); 
+                     
                      this.turn++;
 
-                     this._doRule(rule); 
-                     
                      this._check();
                      
-                     if(!this.completed) {
+                     if(!this.completed && changes > 0) {
                          this._createNextItem();
                      }
 
                  }
                  , _doRule : function (rule) {
+					var changes = 0;
                      for(var ruleBase = 0; ruleBase <= this.MAX_Y; ruleBase++) {
                          var currentGroup = $.grep(this.items, function (item) {
                              return (item[rule.base] == ruleBase);
@@ -356,8 +382,10 @@
 
                          }
 
-                         rule.reorder(currentGroup); 
+                        changes += rule.reorder(currentGroup); 
                      }   
+					 
+					 return changes;
                  }
                  , _check : function () {
                      for(var index = this.items.length-1; index >= 0; index --) {
