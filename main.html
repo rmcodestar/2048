@@ -67,7 +67,7 @@
                     <button class="btn btn-default" @click="right" :class="{ 'active' : (direction == 'right')}">▷</button>
                     <button class="btn btn-default" @click="newGame">NEW</button>
                 </div>
-                <h1>2048</h1>
+                <h1>2048 <span class="badge">{{turn}}</span></h1>
             </div>
             <div class="text-center">
                 <table class="game-board" :class="{'end' : isCompleted}">
@@ -162,13 +162,7 @@
                  , newGame : function () {
                      this.items = [];
                      this.completed = false;
-                     this.items.push(new Item({
-                         x : 0
-                         , y: 0
-                         , value : 2
-                         , turn : this.turn
-                     }));
-                
+                     this._createNextItem();                
                  }
                  , createRandomItem : function () { //TODO : optimize
                      var ITEM_BUCKETS = [];
@@ -257,7 +251,7 @@
                     this._excute({
                         base : "x"
                         , ordering: function (target, other) {
-                         return target.y - other.y;
+                            return target.y - other.y;
                         }
                         , reorder : (function (orderTargets) {
 							var changes = 0;
@@ -281,7 +275,7 @@
                     this._excute({
                         base : "x"
                         , ordering: function (target, other) {
-                         return other.y - target.y;
+                             return other.y - target.y;
                         }
                         , reorder : (function (orderTargets) {
 							var changes = 0;
@@ -305,7 +299,7 @@
                     this._excute({
                         base : "y"
                         , ordering: function (target, other) {
-                         return target.x - other.x;
+                             return target.x - other.x;
                         }
                         , reorder : (function (orderTargets) {
 							var changes = 0;
@@ -328,7 +322,7 @@
                     this._excute({
                         base : "y"
                         , ordering: function (target, other) {
-                         return other.x - target.x;
+                             return other.x - target.x;
                         }
                         , reorder : (function (orderTargets) {
 							var changes = 0;
@@ -347,16 +341,28 @@
 
                  }
                  , _excute : function (rule) {
-                     var changes = this._doRule(rule); 
-                     
-                     this.turn++;
+                     var changes = this._doRule(rule);                      
 
                      this._check();
                      
+                     if(this._disableMove()) {
+                        this.completed = true;
+                        this.isSuccess = false;
+                        return;
+                    }
+                     
                      if(!this.completed && changes > 0) {
+                         this.turn++;
                          this._createNextItem();
                      }
 
+                 }
+                 , _disableMove : function () {
+                     var array = $.grep(this.items, function (item) {
+                         return item.state != STATE.DELETED;
+                     });
+                     
+                     return array.length == 16;
                  }
                  , _doRule : function (rule) {
 					var changes = 0;
@@ -402,13 +408,6 @@
                  }
                  , _createNextItem : function () {
                     var nextItem = this.createRandomItem();
-                     
-                    if(!nextItem) {
-                        this.completed = true;
-                        this.isSuccess = false;
-                        return;
-                    }
-                     
                     this.items.push(nextItem);
 
                  }
